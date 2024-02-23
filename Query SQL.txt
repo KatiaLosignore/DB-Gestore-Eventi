@@ -1,0 +1,153 @@
+
+Selezionare tutti gli eventi gratis, cioè con prezzo nullo (19)
+
+SELECT * 
+FROM `events`
+WHERE `price` IS NULL;
+
+Selezionare tutte le location in ordine alfabetico (82)
+
+SELECT `name` AS `name_location`
+FROM `locations`
+ORDER BY `name` ASC;
+
+Selezionare tutti gli eventi che costano meno di 20 euro e durano meno di 3 ore (38)
+
+SELECT *
+FROM `events`
+WHERE `price` < '20.00'
+AND `duration` < '03:00:00';
+
+Selezionare tutti gli eventi di dicembre 2023 (25)
+
+SELECT *
+FROM `events`
+WHERE MONTH(`end_of_sale`) = 12 
+AND YEAR(`end_of_sale`) = 2023;
+
+Selezionare tutti gli eventi con una durata maggiore alle 2 ore (823)
+
+SELECT * FROM `events`
+WHERE HOUR(`duration`) > 2;
+
+Selezionare tutti gli eventi, mostrando nome, data di inizio, ora di inizio, ora di fine e
+durata totale (1040)
+
+SELECT `name` AS `name_event`,DATE(`start`) AS `start_date`,TIME(`start`) AS `start_time`, ADDTIME(TIME(`start`), `duration`) AS `end_time`,`duration` AS `total_duration`
+FROM `events`;
+
+Selezionare tutti gli eventi aggiunti da “Fabiano Lombardo” (id: 1202) (132)
+
+SELECT  `name`, `slug`, `description` , `users`.`first_name`, `users`.`last_name`, `users`.`id` AS `id_user`
+FROM `events`
+JOIN `users`
+ON `users`.`id` = `events`.`user_id`
+WHERE `first_name` = "Fabiano"
+AND `last_name` = "Lombardo";
+
+Selezionare il numero totale di eventi per ogni fascia di prezzo (81)
+
+SELECT COUNT(`total_tickets`) AS `number_total_events`, `price`
+FROM `events`
+GROUP by `price`;
+
+Selezionare tutti gli utenti admin ed editor (9)
+
+SELECT * 
+FROM `users`
+JOIN `roles`
+ON `roles`.`id`=  `users`.`role_id`
+WHERE `role_id` BETWEEN '1' AND '2';
+
+Selezionare tutti i concerti (eventi con il tag “concerti”) (72)
+
+SELECT DISTINCT `events`.`name` AS `name_event`, `events`.`description`, `tags`.`name` AS `tag_name`
+FROM `events`
+JOIN `event_tag`
+ON `events`.`id` = `event_tag`.`event_id`
+JOIN `tags`
+ON `event_tag`.`tag_id` = `tags`.`id`
+WHERE `tags`.`name` = 'concerti';
+
+Selezionare tutti i tag e il prezzo medio degli eventi a loro collegati (11)
+
+SELECT `tags`.`name` AS `tag_name`, AVG(`events`.`price`) AS `avg_price`
+FROM `tags`
+JOIN `event_tag`
+ON `tags`.`id` = `event_tag`.`tag_id`
+JOIN `events`
+ON `event_tag`.`event_id` = `events`.`id`
+GROUP BY `tags`.`id`, `tags`.`name`;
+
+Selezionare tutte le location e mostrare quanti eventi si sono tenute in ognuna di
+esse (82)
+
+SELECT `locations`.`name` AS location_name, COUNT(`events`.`id`) AS event_count
+FROM `locations`
+LEFT JOIN `events` 
+ON `locations`.`id` = `events`.`location_id`
+GROUP BY `locations`.`id`, `locations`.`name`;
+
+Selezionare tutti i partecipanti per l’evento “Concerto Classico Serale” (slug:
+concerto-classico-serale, id: 34) (30)
+
+SELECT `users`.`first_name`, `users`.`last_name`, `events`. `name`, `events`. `slug`,`events`.`id`
+FROM `users`
+JOIN `events`
+ON `users`.`id` = `events`.`user_id`
+JOIN `bookings`
+ON `bookings`.`event_id` = `events`.`id`
+WHERE  `events`.`id` = 34;
+
+Selezionare tutti i partecipanti all’evento “Festival Jazz Estivo” (slug:
+festival-jazz-estivo, id: 2) specificando nome e cognome (13)
+
+SELECT `users`.`first_name`, `users`.`last_name`, `events`. `name`, `events`. `slug`,`events`.`id`
+FROM `users`
+JOIN `events`
+ON `users`.`id` = `events`.`user_id`
+JOIN `bookings`
+ON `bookings`.`event_id` = `events`.`id`
+WHERE  `events`.`id` = 2;
+
+Selezionare tutti gli eventi sold out (dove il totale delle prenotazioni è uguale ai
+biglietti totali per l’evento) (18)
+
+SELECT events.*, COUNT(*) AS `sold_out`
+FROM `events`
+JOIN `bookings`
+ON `bookings`.`event_id` = `events`.`id`
+GROUP BY `bookings`.`event_id`
+HAVING COUNT(*) = MAX(`events`.`total_tickets`);
+
+Selezionare tutte le location in ordine per chi ha ospitato più eventi (82)
+
+SELECT locations.*, COUNT(`events`.`id`) AS `total_events`
+FROM `locations`
+JOIN `events` 
+ON `locations`.`id` = `events`.`location_id`
+GROUP BY `locations`.`id`
+ORDER BY `total_events` DESC;
+
+Selezionare tutti gli utenti che si sono prenotati a più di 70 eventi (74)
+
+SELECT users.*, COUNT(`bookings`.`id`) AS total_bookings
+FROM `users`
+JOIN `bookings` 
+ON `users`.`id` = `bookings`.`user_id`
+GROUP BY `users`.`id`
+HAVING total_bookings > 70;
+
+Selezionare tutti gli eventi, mostrando il nome dell’evento, il nome della location, il
+numero di prenotazioni e il totale di biglietti ancora disponibili per l’evento (1040)
+
+SELECT `events`.`name` AS event_name, `locations`.`name` AS location_name, COUNT(`bookings`.`id`) AS total_bookings,
+    (`events`.`total_tickets` - COUNT(`bookings`.`id`)) AS available_tickets
+FROM `events`
+JOIN `locations`
+ON `events`.`location_id` = `locations`.`id`
+LEFT JOIN `bookings`
+ON `events`.`id` = `bookings`.`event_id`
+GROUP BY `events`.`id`, `locations`.`id`;
+
+
